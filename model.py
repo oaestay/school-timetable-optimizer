@@ -89,7 +89,7 @@ model.update()
 ==============================================================================
 """
 
-# Se agregan restricciones para fijar alpha
+# (R1) Se agregan restricciones para fijar alpha
 model.addConstrs(
     (
         X.sum(i, "*", "*", p, f)
@@ -110,7 +110,7 @@ model.addConstrs(
     )
 )
 
-# Se agregan restricciones para fijar beta
+# (R2) Se agregan restricciones para fijar beta
 model.addConstrs(
     (
         quicksum(
@@ -122,7 +122,7 @@ model.addConstrs(
     )
 )
 
-# Se agregan restricciones para fijar theta
+# (R3) Se agregan restricciones para fijar theta
 model.addConstrs(
     (
         beta[i, f] <= theta[i]
@@ -131,7 +131,7 @@ model.addConstrs(
     )
 )
 
-# Los profesores asisten a las reuniones de su departamento
+# (R4) Los profesores asisten a las reuniones de su departamento
 model.addConstrs(
     (
         Z[DEPARTAMENTO[j], p, f] == Y[j, DEPARTAMENTO[j], p, f]
@@ -141,7 +141,7 @@ model.addConstrs(
     )
 )
 
-# Los profesores asisten a las reuniones de GPT
+# (R5) Los profesores asisten a las reuniones de GPT
 model.addConstrs(
     (
         Z["GPT", p, f] == Y[j, "GPT", p, f]
@@ -151,7 +151,7 @@ model.addConstrs(
     )
 )
 
-# Los profesores jefes asisten a las reuniones de JEFES
+# (R6) Los profesores jefes asisten a las reuniones de JEFES
 model.addConstrs(
     (
         Z["JEFES", p, f] == Y[j, "JEFES", p, f]
@@ -161,7 +161,7 @@ model.addConstrs(
     )
 )
 
-# Los profesores no jefes no asisten a las reuniones de JEFES
+# (R7) Los profesores no jefes no asisten a las reuniones de JEFES
 model.addConstrs(
     (
         Y[j, "JEFES", p, f] == 0
@@ -171,7 +171,7 @@ model.addConstrs(
     )
 )
 
-# Los profesores no asisten a las reuniones que no son de su departamento
+# (R8) Los profesores no asisten a las reuniones que no son de su departamento
 model.addConstrs(
     (
         Y[j, d, p, f] == 0
@@ -188,8 +188,8 @@ model.addConstrs(
     )
 )
 
-# Un curso, sólo puede recibir una asignatura,
-# de un sólo profesor en el mismo momento:
+# (R9) Un curso, solo puede recibir una asignatura,
+# de un solo profesor en el mismo momento:
 model.addConstrs(
     (
         X.sum(i, "*", "*", p, f) <= 1
@@ -199,8 +199,8 @@ model.addConstrs(
     )
 )
 
-# Un profesor, sólo puede impartir una asignatura,
-# a un sólo curso en el mismo momento:
+# (R10) Un profesor, solo puede impartir una asignatura,
+# a un solo curso en el mismo momento:
 model.addConstrs(
     (
         X.sum("*", j, "*", p, f) <= 1
@@ -210,7 +210,7 @@ model.addConstrs(
     )
 )
 
-# Los profesores sólo hacen clases de su especialidad
+# (R11) Los profesores solo hacen clases de su especialidad
 model.addConstrs(
     (
         X.sum("*", j, k, "*", "*") == 0
@@ -228,7 +228,8 @@ model.addConstrs(
 )
 
 
-# Se deben dictar la cantidad de horas requeridas por cada curso de cada asignatura
+# (R12) Se deben dictar la cantidad de horas requeridas por
+# cada curso de cada asignatura
 model.addConstrs(
     (
         X.sum(i, "*", k, "*", "*") == REQUISITOS_ASIGNATURAS[i][k]
@@ -237,7 +238,8 @@ model.addConstrs(
     )
 )
 
-# Se deben dictar la cantidad de horas requeridas en reuniones de departamentos
+# (R13) Se deben dictar la cantidad de horas requeridas
+# en reuniones de departamentos
 model.addConstrs(
     (
         Z.sum(d, "*", "*") == REQUISITOS_REUNIONES[d]
@@ -245,7 +247,7 @@ model.addConstrs(
     )
 )
 
-# Un profesor no puede dictar clases y asistir a una reunión
+# (R14) Un profesor no puede dictar clases y asistir a una reunión
 # al mismo tiempo
 model.addConstrs(
     (
@@ -256,7 +258,7 @@ model.addConstrs(
     )
 )
 
-# Los cursos tienen clases desde el primer periodo
+# (R15) Los cursos tienen clases desde el primer periodo
 model.addConstrs(
     (
         alpha[i, 1, f] == 1
@@ -265,7 +267,7 @@ model.addConstrs(
     )
 )
 
-# Para cada curso, se deben dictar asignaturas desde la mañana,
+# (R16) Para cada curso, se deben dictar asignaturas desde la manana,
 # sin interrupciones
 model.addConstrs(
     (
@@ -280,6 +282,8 @@ model.addConstrs(
     )
 )
 
+# (R17) Biologia, fisica y quimica deben realizarse sin recreo entremedio,
+# dos modulos seguidos:
 model.addConstrs(
     (
         X.sum(i, "*", k, p, f) == X.sum(i, "*", k, p + 1, f)

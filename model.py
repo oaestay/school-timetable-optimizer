@@ -302,6 +302,7 @@ model.addConstrs(
         for k in ASIGNATURAS_DOBLES
         for p in PERIODOS_INICIO_MODULO
         for f in DIAS
+        if REQUISITOS_ASIGNATURAS[i][k] % 2 == 0
     )
 )
 
@@ -317,12 +318,9 @@ model.addConstrs(
 # (R18) Hay asignaturas que no se pueden realizar en el septimo
 # u octavo modulo:
 model.addConstrs(
-        X.sum(i, j, k, p, f) == 0
-        for i in CURSOS
-        for j in PROFESORES
+        X.sum("*", "*", k, p, "*") == 0
         for k in ASIGNATURAS_RESTRINGIDAS
         for p in range(7, 9)
-        for f in DIAS
 )
 
 # (R19) Para los terceros y cuartos, lenguajes y matematicas se
@@ -369,7 +367,6 @@ model.addConstrs(
         if k_0 != k_1
     )
 )
-
 
 # Objective
 obj = P.sum() + theta.sum() / len(CURSOS) + quicksum(

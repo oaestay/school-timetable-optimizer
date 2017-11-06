@@ -11,16 +11,48 @@ CURSOS = [
     "2C",
     "2D",
     "2E",
-    # "3A",
-    # "3B",
-    # "3C",
-    # "3D",
-    # "3E",
-    # "4A",
-    # "4B",
-    # "4C",
-    # "4D",
-    # "4E",
+    "3A",
+    "3B",
+    "3C",
+    "3D",
+    "3E",
+    "4A",
+    "4B",
+    "4C",
+    "4D",
+    "4E",
+]
+
+PRIMEROS = [
+    "1A",
+    "1B",
+    "1C",
+    "1D",
+    "1E",
+]
+
+SEGUNDOS = [
+    "2A",
+    "2B",
+    "2C",
+    "2D",
+    "2E",
+]
+
+TERCEROS = [
+    "3A",
+    "3B",
+    "3C",
+    "3D",
+    "3E",
+]
+
+CUARTOS = [
+    "4A",
+    "4B",
+    "4C",
+    "4D",
+    "4E",
 ]
 
 PROFESORES = [
@@ -32,7 +64,6 @@ PROFESORES = [
     "VASQUEZ VERGARA STEFANY ANDREA",
     "CRUZ MUÑOZ BARBARA PATRICIA",
     "ALEGRIA ESPINOZA MARIA ISABEL",
-    "ARAYA VALENZUELA MARA FRANCISCA",
     "CATALDO NUÑEZ FABIOLA ANDREA",
     "CONA LINCOQUEO MARIANELA MERCEDES",
     "CORNEJO TRONCOSO LAURA CECILIA",
@@ -65,8 +96,6 @@ PROFESORES = [
     "WEISS FUENTES NATHALIE DE JESUS EL",
     "URRA PARRA CRISTIAN GABRIEL",
     "GONZALEZ MANRIQUEZ ROCIO ALEJANDRA",
-    "NN 1 HISTORIA",
-    "NN PARVULOS",
     "CIFUENTES NATALIA"
 ]
 
@@ -136,7 +165,7 @@ DEPARTAMENTOS = [
     "JEFES"
 ]
 
-PERIODOS = 10
+PERIODOS = 11
 
 DIAS = [
     "LUNES",
@@ -224,11 +253,74 @@ PERIODOS_INICIO_MODULO = [
     1,
     3,
     5,
-    8
 ]
 
-CURSOS_DOBLES = [
-    "BIOLOGIA",
+# ASIGNATURAS_DOBLES = [
+#     "BIOLOGIA",
+#     "FISICA",
+#     "QUIMICA"
+# ]
+
+ASIGNATURAS_RESTRINGIDAS = [
     "FISICA",
-    "QUIMICA"
+    "QUIMICA",
+    "BIOLOGIA",
+    "INGLES",
+    "ED. FISICA",
+]
+
+HORAS_MAX = {}
+with open('./data/horas_max.csv') as file:
+    horas_max = csv.DictReader(file)
+    for asignaturas in horas_max:
+        _asignatura = dict(asignaturas)
+        HORAS_MAX[_asignatura['CURSOS']] = int(_asignatura['HORAS_MAX']) \
+            if _asignatura['HORAS_MAX'] else 0
+
+
+ASIGNATURAS_DOBLES = [
+    "INNOVACION COCINA INTERNACIONAL",
+    "ARTES VISUALES",
+    "LENGUAJE",
+    "RECEPECIÓN Y ALMACENAMIENTO",
+    "INGLES",
+    "BIOLOGIA",
+    "EXPRESION MUSICAL P",
+    "PREP MONTAJE BUFFET",
+    "EXPRESION LITERARIA",
+    "INNOVACION PASTERERIA Y",
+    "SIST OPERATIVOS REDES",
+    "PLANIF DE LA PRODUCCIÓN",
+    "ACTIVIDADES EDUCATIVAS",
+    "INST MANT BAS TERM INFORM",
+    "EMPRENDIMIENTO",
+    "RECREACION Y BIENESTAR DE",
+    "QUIMICA",
+    "OPER Y FUND TELECO",
+    "ED. FISICA",
+    "MANT CIRC ELECTRONICOS",
+    "COMUNIC INALAMBRICAS",
+    "FISICA",
+    "RELIGION",
+    "COCINA CHILENA",
+    "ELAB PROD REPOSTERIA",
+    "HISTORIA",
+    "ELAB BAJA COMPLEJIDAD",
+    "SERVICIO COMEDOR",
+    "ELAB PASTAS Y MASAS",
+    "INST REDES TELEF CONVE",
+    "ED. TECNOLOGICA",
+    "MATEMATICAS",
+    "ELAB PROD PASTELERIA",
+    "SALUD EN PARVULO",
+    "INST CONFIG REDES",
+    "RELACION C/FAMILIA",
+    "MATERIAL DIDACTICO",
+    "MANT REDES ACCES BANDA",
+    "HIGIENE Y SEGURIDAD",
+    "TIC´S",
+    "DISEÑO Y PROGRAMACION",
+    "ALIMENTACION PARVULO",
+    "INST SERV BASICO TELCO",
+    "ACONDICIMIENTO FISICO",
 ]

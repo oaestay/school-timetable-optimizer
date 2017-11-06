@@ -1,7 +1,8 @@
-from data import DIAS, PERIODOS, CURSOS, PROFESORES, ASIGNATURAS, \
-    DEPARTAMENTO, DEPARTAMENTOS, CURSOS_DOBLES, PERIODOS_INICIO_MODULO, \
-    REQUISITOS_ASIGNATURAS, REQUISITOS_REUNIONES, IMPARTE, \
-    PROFESORES_JEFES, PROFESORES_NO_JEFES
+from data import DIAS, PERIODOS, CURSOS, PRIMEROS, SEGUNDOS, TERCEROS, \
+    CUARTOS, PROFESORES, ASIGNATURAS, DEPARTAMENTO, DEPARTAMENTOS, \
+    ASIGNATURAS_DOBLES, PERIODOS_INICIO_MODULO, REQUISITOS_ASIGNATURAS, \
+    REQUISITOS_REUNIONES, IMPARTE, PROFESORES_JEFES, PROFESORES_NO_JEFES, \
+    ASIGNATURAS_RESTRINGIDAS, HORAS_MAX
 from gurobipy import Model, quicksum, GRB
 import time
 
@@ -25,6 +26,16 @@ X = model.addVars(
         for j in PROFESORES
         for k in ASIGNATURAS
         for p in range(1, PERIODOS + 1)
+        for f in DIAS
+    ],
+    vtype=GRB.BINARY
+)
+
+P = model.addVars(
+    [
+        (i, p, f)
+        for i in CURSOS
+        for p in range(1, PERIODOS)
         for f in DIAS
     ],
     vtype=GRB.BINARY
@@ -282,34 +293,91 @@ model.addConstrs(
     )
 )
 
-# (R17) Biologia, fisica y quimica deben realizarse sin recreo entremedio,
-# dos modulos seguidos:
+# (R17) Hay cursos que deben realizarse sin recreo entremedio,
+# dos modulos seguidos, en las primeras 6 horas:
 model.addConstrs(
     (
         X.sum(i, "*", k, p, f) == X.sum(i, "*", k, p + 1, f)
         for i in CURSOS
-        for k in CURSOS_DOBLES
+        for k in ASIGNATURAS_DOBLES
         for p in PERIODOS_INICIO_MODULO
         for f in DIAS
     )
 )
 
+# model.addConstrs(
+#     (
+#         X.sum(i, "*", k, 7, f) == 0
+#         for i in CURSOS
+#         for k in ASIGNATURAS_DOBLES
+#         for f in DIAS
+#     )
+# )
+
+# (R18) Hay asignaturas que no se pueden realizar en el septimo
+# u octavo modulo:
+model.addConstrs(
+        X.sum(i, j, k, p, f) == 0
+        for i in CURSOS
+        for j in PROFESORES
+        for k in ASIGNATURAS_RESTRINGIDAS
+        for p in range(7, 9)
+        for f in DIAS
+)
+
+# (R19) Para los terceros y cuartos, lenguajes y matematicas se
+# deben dictar hasta el sexto modulo:
 model.addConstrs(
     (
-        X.sum(i, "*", k, 7, f) == 0
+        X.sum(i, "*", k, p, "*") == 0
+        for i in TERCEROS + CUARTOS
+        for k in ["MATEMATICAS", "LENGUAJE"]
+        for p in range(7, PERIODOS + 1)
+    )
+)
+
+# (R20) No se realizan clases en el onceavo modulo
+model.addConstrs(
+    (
+        X.sum(i, j, k, 11, f) == 0
         for i in CURSOS
-        for k in CURSOS_DOBLES
+        for j in PROFESORES
+        for k in ASIGNATURAS
         for f in DIAS
     )
 )
 
+# (R21) Se realizan la cantidad de horas maximas en cada asignatura
+model.addConstrs(
+    (
+        X.sum(i, "*", k, "*", f) <= HORAS_MAX[k]
+        for i in CURSOS
+        for k in ASIGNATURAS
+        for f in DIAS
+    )
+)
+
+# (R22) Se cuentan los cambios de asignaturas
+model.addConstrs(
+    (
+        X.sum(i, "*", k_1, p + 1, f) - X.sum(i, "*", k_0, p, f) <= P[i, p, f]
+        for i in CURSOS
+        for k_0 in ASIGNATURAS
+        for k_1 in ASIGNATURAS
+        for p in range(1, PERIODOS)
+        for f in DIAS
+        if k_0 != k_1
+    )
+)
+
+
 # Objective
-obj = theta.sum() + quicksum(
+obj = P.sum() + theta.sum() / len(CURSOS) + quicksum(
     p * Z[d, p, f]
     for d in DEPARTAMENTOS
     for p in range(1, PERIODOS + 1)
     for f in DIAS
-) / M
+) / (M + (PERIODOS + 1))
 
 
 model.setObjective(obj, GRB.MINIMIZE)

@@ -2,7 +2,7 @@ from data import DIAS, PERIODOS, CURSOS, PRIMEROS, SEGUNDOS, TERCEROS, \
     CUARTOS, PROFESORES, ASIGNATURAS, DEPARTAMENTO, DEPARTAMENTOS, \
     ASIGNATURAS_DOBLES, PERIODOS_INICIO_MODULO, REQUISITOS_ASIGNATURAS, \
     REQUISITOS_REUNIONES, IMPARTE, PROFESORES_JEFES, PROFESORES_NO_JEFES, \
-    ASIGNATURAS_RESTRINGIDAS, HORAS_MAX
+    ASIGNATURAS_RESTRINGIDAS, HORAS_MAX, JEFATURA
 from gurobipy import Model, quicksum, GRB
 import time
 
@@ -37,6 +37,16 @@ P = model.addVars(
         for i in CURSOS
         for p in range(1, PERIODOS)
         for f in DIAS
+    ],
+    vtype=GRB.BINARY
+)
+
+R = model.addVars(
+    [
+        (i, j, k)
+        for i in CURSOS
+        for j in PROFESORES
+        for k in ASIGNATURAS
     ],
     vtype=GRB.BINARY
 )
@@ -118,6 +128,34 @@ model.addConstrs(
         for i in CURSOS
         for p in range(1, PERIODOS + 1)
         for f in DIAS
+    )
+)
+
+model.addConstrs(
+    (
+        X.sum(i, j, k, "*", "*")
+        <= M * R[i, j, k]
+        for i in CURSOS
+        for j in PROFESORES
+        for k in ASIGNATURAS
+    )
+)
+
+model.addConstrs(
+    (
+        X.sum(i, j, k, "*", "*")
+        >= R[i, j, k]
+        for i in CURSOS
+        for j in PROFESORES
+        for k in ASIGNATURAS
+    )
+)
+
+model.addConstrs(
+    (
+        R.sum(i, "*", k) <= 1
+        for i in CURSOS
+        for k in ASIGNATURAS
     )
 )
 
@@ -238,6 +276,17 @@ model.addConstrs(
     )
 )
 
+# (RYY) Los profesores solo hacen clases de jefatura, en el curso
+# en que son profesores jefes
+model.addConstrs(
+    (
+        X.sum(i, j, "JEFATURA", "*", "*") == 0
+        for i in PROFESORES
+        for j in PROFESORES
+        if JEFATURA[j] != i
+    )
+)
+
 
 # (R12) Se deben dictar la cantidad de horas requeridas por
 # cada curso de cada asignatura
@@ -297,8 +346,9 @@ model.addConstrs(
 # dos modulos seguidos, en las primeras 6 horas:
 model.addConstrs(
     (
-        X.sum(i, "*", k, p, f) == X.sum(i, "*", k, p + 1, f)
+        X.sum(i, j, k, p, f) == X.sum(i, j, k, p + 1, f)
         for i in CURSOS
+        for j in PROFESORES
         for k in ASIGNATURAS_DOBLES
         for p in PERIODOS_INICIO_MODULO
         for f in DIAS
@@ -322,17 +372,23 @@ model.addConstrs(
 )
 # (RX) Jefatura se realiza al septimo y octavo modulo:
 model.addConstrs(
-        X.sum(i, "*", "JEFATURA", 7, f) == 0
-        for i in CURSOS
-        for f in DIAS
+        X.sum(JEFATURA[j], j, "JEFATURA", 7, "*") == 1
+        for j in PROFESORES
+        if JEFATURA[j] is not None
 )
 
 model.addConstrs(
-        X.sum(i, "*", "JEFATURA", 8, f) == 0
-        for i in CURSOS
-        for f in DIAS
+        X.sum(JEFATURA[j], j, "JEFATURA", 8, "*") == 1
+        for j in PROFESORES
+        if JEFATURA[j] is not None
 )
 
+model.addConstrs(
+        X.sum(JEFATURA[j], j, "JEFATURA", 7, f) == X.sum(JEFATURA[j], j, "JEFATURA", 8, f)
+        for j in PROFESORES
+        for f in DIAS
+        if JEFATURA[j] is not None
+)
 
 # (R18) Hay asignaturas que no se pueden realizar en el septimo
 # u octavo modulo:

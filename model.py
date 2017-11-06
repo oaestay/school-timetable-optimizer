@@ -306,14 +306,33 @@ model.addConstrs(
     )
 )
 
-# model.addConstrs(
-#     (
-#         X.sum(i, "*", k, 7, f) == 0
-#         for i in CURSOS
-#         for k in ASIGNATURAS_DOBLES
-#         for f in DIAS
-#     )
-# )
+# (RX) Biologia fisica y quimica se realizan dentro de las primeras 6 horas:
+model.addConstrs(
+    (
+        X.sum(i, "*", k, p, f) == 0
+        for i in CURSOS
+        for k in [
+            "BIOLOGIA",
+            "FISICA",
+            "QUIMICA"
+        ]
+        for p in range(7, PERIODOS)
+        for f in DIAS
+    )
+)
+# (RX) Jefatura se realiza al septimo y octavo modulo:
+model.addConstrs(
+        X.sum(i, "*", "JEFATURA", 7, f) == 0
+        for i in CURSOS
+        for f in DIAS
+)
+
+model.addConstrs(
+        X.sum(i, "*", "JEFATURA", 8, f) == 0
+        for i in CURSOS
+        for f in DIAS
+)
+
 
 # (R18) Hay asignaturas que no se pueden realizar en el septimo
 # u octavo modulo:
